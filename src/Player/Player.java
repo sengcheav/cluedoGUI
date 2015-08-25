@@ -9,6 +9,12 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+
 import Piece.Characters;
 import Piece.IllegalParameterException;
 import Piece.Room;
@@ -30,11 +36,15 @@ private boolean terminated = false ;
 private boolean winner = false ; 
 private Square [][] square ; 
 private String command ; 
+
 private boolean enableKey = false ; 
 private Board board ;
 private String name ;
 private boolean active = false ; 	
 private String character ;
+private int rolled = 0 ;
+private boolean accusationButton = false ; 
+	
 	public Player(int i , String n ,String character){
 		
 		this.index = i ; 
@@ -227,16 +237,23 @@ private String character ;
 	 * it can the piece will then need to updating it new location (square ) 
 	 * otherwise it will print out telling player to chhose another direction. 
 	 * Finally it will check if the piece is in the room or not if it is the 
-	 * player will then have to make suggestion 
+	 * player will then have to make 
+
+ 
+ 
 	 * 
 	 */
-	public void turn ( Square[][] s ,Dice dice , ArrayList<Card> solution ,ArrayList<Player> plist ){
-		this.active = true ; this.board.getCanvas().repaint();
+	public void turn( Square[][] s ,int dice , ArrayList<Card> solution ,ArrayList<Player> plist ){
+		this.active = true ; 
+		this.board.getCanvas().repaint();
 		this.square= s ;
-		int rolled = dice.roll() ;
+	//	int rolled = dice.roll() ;
+		rolled = dice ; 
 		//Position from = this.getPos() ; 
 		int i = this.getIndex() + 1 ; 
-		while (rolled >0){ // move correspond to result of the dice
+		while (rolled >0 && !accusationButton){ // move correspond to result of the dice
+			if(accusationButton){ rolled =0 ;}
+			else {
 			printBoard(s) ;
 			//String m = ask("\nPlayer "+i +": You got "+ rolled + " moves Respond with u for up, d for down, l for left, r for right as move ");
 			System.err.println("\nPlayer "+i +": You got "+ rolled + " moves Respond with u for up, d for down, l for left, r for right as move ");
@@ -251,22 +268,18 @@ private String character ;
 				
 				try {
 					TimeUnit.MILLISECONDS.sleep(200); // listen to user input every 200 ms so the program is not busy waiting
-					//n++;
-					//System.out.println(n);
 					m = this.command ;
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				
 			}command = null ; 
-			//System.out.println("Before is : "+this.getPos().toString()); 
 			
 			Position to = calculatePos( this.pos , m) ; 
 			if(canMove(this.pos, to ,s)){
 				s[this.pos.getY()][this.pos.getX()].removeCharactersOn();
 				if(s[to.getY()][to.getX()].setPlayerOn(this)) { // if no other character on the square , set the character on that square 
 					this.pos = to.getPos() ;  // and change the position of the player to that position 
-					//System.out.println("after is : "+this.getPos().toString()); 
 					this.board.getCanvas().repaint();
 					
 				}
@@ -279,19 +292,42 @@ private String character ;
 				System.err.println("You can not move this way, please chhose another way") ;
 			}
 			rolled--;	
-			
+		    }
 		}
 		if(inRoom(s[this.getPos().getY()][this.getPos().getX()]) ){ // check if the player is in room 
-			int choice = askInt("accusation type 1 or 2 for suggestion ") ;
-			while (choice != 1 && choice !=2){
-				System.err.println("Type 1 or 2 "); 
-				choice = askInt("accusation type 1 or 2 for suggestion ") ;
+//			int choice = askInt("accusation type 1 or 2 for suggestion ") ;
+//			while (choice != 1 && choice !=2){
+//				System.err.println("Type 1 or 2 "); 
+//				choice = askInt("accusation type 1 or 2 for suggestion ") ;
+//			}
+			JPanel choicePanel = new JPanel() ; 
+			String [] array = {"Accusation" , "Suggestion" };
+			ButtonGroup bgroup = new ButtonGroup() ; 
+			choicePanel.setLayout(new BoxLayout(choicePanel, BoxLayout.PAGE_AXIS)); 
+			for(int ii = 0 ; ii < array.length ; ii++ ){
+				JRadioButton b;
+	    		if(ii == 0 ){
+	    			b= new JRadioButton(array[ii], true);
+	    		}else {
+	    			b= new JRadioButton(array[ii]);
+	    		}
+				b.setActionCommand(""+ii);
+				bgroup.add(b);
+				choicePanel.add(b);
 			}
-			if(choice == 1 ){
-				accusation(solution); 
+			int result1 = JOptionPane.showConfirmDialog(null, choicePanel, "Suggetion or Accusation", JOptionPane.OK_CANCEL_OPTION);
+			int choice = Integer.parseInt(bgroup.getSelection().getActionCommand()); 
+			
+			if(choice == 0 ){
+				guiAccusation(solution); 
 			}else {
-				suggestion(s[this.getPos().getY()][this.getPos().getX()], plist);
+				guiSuggestion(s[this.getPos().getY()][this.getPos().getX()], plist);
 			}	
+		}else {
+			if(this.accusationButton){
+				guiAccusation(solution);
+				this.accusationButton =false ;
+			}
 		}
 		this.enableKey = false ;
 		this.active=false ; 
@@ -359,6 +395,91 @@ private String character ;
 		} 	
 	}
 	
+	/**
+	 * Setting up the popup Panel (Character and weapon) and adding all the character and room as
+	 * the JRadioButton to each Panel, get the user input and do the suggestion check
+	 * @param s
+	 * @param plist
+	 */
+	public void guiSuggestion(Square s , ArrayList<Player> plist){
+		String[] characters = {"Miss_Scarlett","Colonel_Mustard","Mrs_White","The_Reverend_Green","Mrs_Peacock","Professor_Plum"};
+		String [] weapons = { "Candlestick","Dagger", "Lead_Pipe","Revolver","Rope","Spanner"};
+		//String [] rooms = {"kitchen","ballroom","conservatiory","billiardroom", "library","study","hall","lounge","dinngroom"};
+		try {
+		    JPanel suggestionPanel = new JPanel(); 
+	    	suggestionPanel.setLayout(new BoxLayout(suggestionPanel, BoxLayout.PAGE_AXIS));
+	    	ButtonGroup charGroup = new ButtonGroup();
+	    	
+	    	for(int i =0  ; i < characters.length ;i++){
+	    		JRadioButton b1;
+	    		if(i == 0 ){
+	    			b1= new JRadioButton(characters[i], true);
+	    		}else {
+	    			b1= new JRadioButton(characters[i]);
+	    		}
+	    		String istring  = ""+i;
+	    		b1.setActionCommand(istring);
+	    		charGroup.add(b1);
+	            suggestionPanel.add(b1);
+	    	}
+	    	
+	    	int result1 = JOptionPane.showConfirmDialog(null, suggestionPanel, "Suggetion- Characters2", JOptionPane.OK_CANCEL_OPTION);
+	    	int chosenChar = Integer.parseInt(charGroup.getSelection().getActionCommand());
+	    	
+	    	JPanel suggestionPanel2 = new JPanel(); 
+	    	suggestionPanel2.setLayout(new BoxLayout(suggestionPanel2, BoxLayout.PAGE_AXIS));
+	    	ButtonGroup weaGroup = new ButtonGroup();
+	    	
+	  	   
+	    	for(int i =0  ; i < weapons.length ;i++){
+	    		JRadioButton b1;
+	    		if(i == 0 ){
+	    			b1= new JRadioButton(weapons[i], true);
+	    		}else {
+	    			b1= new JRadioButton(weapons[i]);
+	    		}
+	    		String istring  = ""+i;
+	    		b1.setActionCommand(istring);
+	    		weaGroup.add(b1);
+	            suggestionPanel2.add(b1);
+	    	}
+	    	
+	    	int result2 = JOptionPane.showConfirmDialog(null, suggestionPanel2, "Suggetion- Weapon", JOptionPane.OK_CANCEL_OPTION);
+	    	int chosenWea = Integer.parseInt(weaGroup.getSelection().getActionCommand());
+	    	//int chosenRoom = Integer.parseInt(roomGroup.getSelection().getActionCommand());
+	    	Room r1 = getRoomPlayerIn(s) ;
+	    	Card r = new Card (r1) ;
+			Card c = new Card (new Characters(characters[chosenChar]));
+			Card w = new Card (new Weapon(weapons[chosenWea]));
+			System.out.println("Your choice are :" + r.getName() +" - " +c.getName() +" - "+w.getName());
+			if(!this.announcementList.isEmpty()){
+				this.announcementList.clear() ; // clear the card from last time announcemnent if any
+			}
+			this.announcementList = announcement(c, w, r);
+			int refuteNum = 0 ; 
+			for(Player p : plist){
+				if(p.getIndex() != this.index){
+					int index = p.getIndex() +1 ; 
+					if (p.refute(announcementList)){
+						refuteNum++ ; 
+						System.out.println("Player " + index +" has refute your announcement"); 
+					}
+				}
+			}
+			if (refuteNum == 0){
+				System.out.println("No one refute your announcement") ; 
+			}
+			
+			
+			
+			
+			} catch (IllegalParameterException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+	    	
+		
+	}
 	/*
 	 * This method will return the arrayList that contain all the card that player
 	 * would like to do the announcement with
@@ -463,11 +584,112 @@ private String character ;
 	}
 	
 	
-	/*
-	 * after Player making accusation (character, weapon ,room) card 
+	/**
+	 * setup popup Panel for each category (Character , weapon , room) by adding 
+	 * the JRadioButton of each character weapon room to it , get all the user 
+	 * input and do the accusationCheck , Terminate the player if the accusationCheck
+	 * return false , otherwise set the player as the winner.
+	 * @param solution
+	 */
+	public void guiAccusation(ArrayList<Card> solution){
+		
+		
+		String[] characters = {"Miss_Scarlett","Colonel_Mustard","Mrs_White","The_Reverend_Green","Mrs_Peacock","Professor_Plum"};
+		String [] weapons = { "Candlestick","Dagger", "Lead_Pipe","Revolver","Rope","Spanner"};
+		String [] rooms = {"kitchen","ballroom","conservatiory","billiardroom", "library","study","hall","lounge","dinngroom"};
+		try {
+		    JPanel suggestionPanel = new JPanel(); 
+	    	suggestionPanel.setLayout(new BoxLayout(suggestionPanel, BoxLayout.PAGE_AXIS));
+	    	ButtonGroup charGroup = new ButtonGroup();
+	    	
+	    	for(int i =0  ; i < characters.length ;i++){
+	    		JRadioButton b1;
+	    		if(i == 0 ){
+	    			b1= new JRadioButton(characters[i], true);
+	    		}else {
+	    			b1= new JRadioButton(characters[i]);
+	    		}
+	    		String istring  = ""+i;
+	    		b1.setActionCommand(istring);
+	    		charGroup.add(b1);
+	            suggestionPanel.add(b1);
+	    	}
+	    	
+	    	int result1 = JOptionPane.showConfirmDialog(null, suggestionPanel, "Accusation- Characters2", JOptionPane.OK_CANCEL_OPTION);
+	    	int chosenChar = Integer.parseInt(charGroup.getSelection().getActionCommand());
+	    	
+	    	JPanel suggestionPanel2 = new JPanel(); 
+	    	suggestionPanel2.setLayout(new BoxLayout(suggestionPanel2, BoxLayout.PAGE_AXIS));
+	    	ButtonGroup weaGroup = new ButtonGroup();
+	    	
+	  	   
+	    	for(int i =0  ; i < weapons.length ;i++){
+	    		JRadioButton b1;
+	    		if(i == 0 ){
+	    			b1= new JRadioButton(weapons[i], true);
+	    		}else {
+	    			b1= new JRadioButton(weapons[i]);
+	    		}
+	    		String istring  = ""+i;
+	    		b1.setActionCommand(istring);
+	    		weaGroup.add(b1);
+	            suggestionPanel2.add(b1);
+	    	}
+	    	
+	    	int result2 = JOptionPane.showConfirmDialog(null, suggestionPanel2, "Accusation- Weapon", JOptionPane.OK_CANCEL_OPTION);
+	    	int chosenWea = Integer.parseInt(weaGroup.getSelection().getActionCommand());
+	    	
+	    	
+	    	JPanel suggestionPanel3 = new JPanel(); 
+	    	suggestionPanel3.setLayout(new BoxLayout(suggestionPanel3, BoxLayout.PAGE_AXIS));
+	    	ButtonGroup roomGroup = new ButtonGroup();
+	    	
+	  	   
+	    	for(int i =0  ; i < rooms.length ;i++){
+	    		JRadioButton b1;
+	    		if(i == 0 ){
+	    			b1= new JRadioButton(rooms[i], true);
+	    		}else {
+	    			b1= new JRadioButton(rooms[i]);
+	    		}
+	    		String istring  = ""+i;
+	    		b1.setActionCommand(istring);
+	    		roomGroup.add(b1);
+	            suggestionPanel3.add(b1);
+	    	}
+	    	
+	    	int result3 = JOptionPane.showConfirmDialog(null, suggestionPanel3, "Accusation- Room", JOptionPane.OK_CANCEL_OPTION);
+	    	int chosenRoom = Integer.parseInt(roomGroup.getSelection().getActionCommand());
+	    	
+	    	Card c = new Card ( new Characters(characters[chosenChar]));
+			Card w = new Card ( new Weapon(weapons[chosenWea]));
+			Card r = new Card ( new Room(rooms[chosenRoom]));
+			System.out.println("you Choose :" + c.getName() + " - "+ w.getName() +" - "+ r.getName()); 
+			this.accusationCheck = accusationCheck(c,w,r,solution);
+			if(!this.accusationCheck){
+				System.out.println("You been Terminated from the game :)"); 
+				this.setTerminated() ; 
+				this.hideDeadBody(square);
+			}else {
+				this.winner = true ; 
+			}
+	    	
+		}catch (IllegalParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 *  * after Player making accusation (character, weapon ,room) card 
 	 * These 3 card then will be checking again the solution Card 
 	 * Correct Variable will be increment by 1 every time a card is correct
 	 * If player can get 3 card correct the method will return true otherwise false.
+	 * @param character
+	 * @param weapon
+	 * @param room
+	 * @param solution
+	 * @return
 	 */
 	public boolean accusationCheck(Card character, Card weapon , Card room , ArrayList<Card> solution){
 		int correct = 0 ; 
@@ -491,6 +713,10 @@ private String character ;
 		return this.terminated ; 
 	}
 	
+	/**
+	 * Print the board 
+	 * @param square
+	 */
 	public void printBoard(Square [][] square){
 		
 		for (int i =0 ; i<25 ; i++ ){//
@@ -507,10 +733,20 @@ private String character ;
 		return this.winner ; 
 	}
 	
+	/*
+	 * Remove the piece of eliminated player
+	 */
 	public void hideDeadBody( Square [][]s){
 		s[this.pos.getY()][this.pos.getX()].removeCharactersOn();
 	}
 	
+	/**
+	 * Draw the player at the given position with width and height of 
+	 * the constant
+	 * @param g
+	 * @param xy
+	 * @param constant
+	 */
 	public void draw(Graphics g,Position xy, int constant){
 		int x = xy.getX(), y = xy.getY(), c = constant ; 
 		g.setColor(Color.WHITE);
@@ -563,6 +799,24 @@ private String character ;
 	public String getCharacter(){
 		return this.character ; 
 	}
-	
+	public void setCommand(String c){
+		this.command = c ;
+	}
+	public boolean getEnableKey(){
+		return this.enableKey ; 
+	}
+	public void setEnableKey(boolean b){
+		this.enableKey = b ;
+	}
+	public void setActive(boolean t){
+		this.active =t ;
+	}
+	public void endTurn(){
+		this.rolled = -1  ;
+	}
+	public void accusationClick(boolean b){
+		this.rolled = -1 ; 
+		this.accusationButton = b ; 
+	}
 	
 }

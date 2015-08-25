@@ -2,6 +2,7 @@ package Board;
 
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 import javax.swing.JOptionPane;
@@ -29,7 +30,8 @@ import Square.blankSpace;
 public class Board {
 	
 	private int numOfPlayer ; 
-	private Dice dice = new Dice() ; 
+	private Dice dice1 = new Dice() ; 
+	private Dice dice2 = new Dice() ;
 	private Square square[][] =  new Square[25][25];
 	
 	private ArrayList<Characters> characterList = new ArrayList<Characters>(); 
@@ -48,6 +50,7 @@ public class Board {
 	private cluedoCanvas canvas ; 
 	private ArrayList<String> playerNamesList = new ArrayList<String>();
 	private ArrayList<String> playerChosenChar = new ArrayList<String>(); 
+	
 	/**
 	 * The method will do all the setup 
 	 */
@@ -304,8 +307,8 @@ public class Board {
 				{z,z,z,z,z,z,z,z,z,z,p1,z,z,z,z,p2,z,z,z,z,z,z,z,z,z} ,
 				{z,k,k,k,k,k,s1,z,H,H,H,B,B,B,B,H,H,H,z,c,c,c,c,c,c } ,
 				{z,k,k,k,k,k,k,H,H,B,B,B,B,B,B,B,B,H,H,c,c,c,c,c,c} , 
-				{z,k,k,k,k,k,k,H,H,B,B,B,B,B,B,B,B,H,H,c,c,c,c,c,c} , 
 				{z,k,k,k,k,k,k,H,H,B,B,B,B,B,B,B,B,H,H,d,c,c,c,c,c} , 
+				{z,k,k,k,k,k,k,H,H,B,B,B,B,B,B,B,B,H,H,c,c,c,c,c,c} , 
 				{z,k,k,k,k,k,k,H,H,d,B,B,B,B,B,B,d,H,H,H,c,c,c,s2,z} ,
 				{z,k,k,k,k,d,k,H,H,B,B,B,B,B,B,B,B,H,H,H,H,H,H,H,p3} ,
 				{z,H,H,H,H,H,H,H,H,B,B,B,B,B,B,B,B,H,H,H,H,H,H,H,z} ,
@@ -322,7 +325,7 @@ public class Board {
 				{z,z,H,H,H,H,H,H,H,H,h,h,d,d,h,h,H,H,H,l,l,l,l,l,z} ,
 				{z,s3,L,L,L,L,L,d,H,H,h,h,h,h,h,h,H,H,H,H,H,H,H,p5,z} ,
 				{z,L,L,L,L,L,L,L,H,H,h,h,h,h,h,d,H,H,H,H,H,H,H,z,z} ,
-				{z,L,L,L,L,L,L,L,H,H,h,h,h,h,h,h,H,H,d,s,s,s,s,s,s4} ,
+				{z,L,L,L,L,L,L,L,H,H,h,h,h,h,h,h,H,H,s,d,s,s,s,s,s4} ,
 				{z,L,L,L,L,L,L,L,H,H,h,h,h,h,h,h,H,H,s,s,s,s,s,s,s} ,
 				{z,L,L,L,L,L,L,L,H,H,h,h,h,h,h,h,H,H,s,s,s,s,s,s,s} ,
 				{z,L,L,L,L,L,L,L,p6,H,h,h,h,h,h,h,H,H,s,s,s,s,s,s,s} 
@@ -426,6 +429,7 @@ public class Board {
 	 * Deal the card left from solution to the player evenly 
 	 */
 	public void dealCard( ArrayList<Card> cardleft , ArrayList<Player> playerlist){
+		Collections.shuffle(cardleft);
 		for (int i = 0 ; i < playerlist.size() ; i++){
 			int cardIndex = i ; 
 			while(cardIndex < cardleft.size()){
@@ -489,8 +493,11 @@ public class Board {
 	public ArrayList<Card> getSolutionList(){
 		return this.solution ; 
 	}
-	public Dice getDice(){
-		return this.dice; 
+	public Dice getDice1(){
+		return this.dice1; 
+	}
+	public Dice getDice2(){
+		return this.dice2 ; 
 	}
 	public void setGameFinished(boolean finished){
 		this.gameFinished = finished ; 
@@ -498,36 +505,43 @@ public class Board {
 	public int getNumOfPlayer(){
 		return this.numOfPlayer;
 	}
+	public void setCurrentTurn(int t ){
+		this.currentTurn = t; 
+	}
+	public int getCurrentTurn(){
+		return this.currentTurn ; 
+	}
+	
 		public static void main (String args[]){
 			
-			ArrayList<String> e = new ArrayList<String>();
-			ArrayList<String> e2 = new ArrayList<String>();
-		Board b = new Board(3, e, e2);
-//		for(Card c:b.solution){
-//			System.out.println("solution: "+c.getName()); 
+//			ArrayList<String> e = new ArrayList<String>();
+//			ArrayList<String> e2 = new ArrayList<String>();
+//		Board b = new Board(3, e, e2);
+////		for(Card c:b.solution){
+////			System.out.println("solution: "+c.getName()); 
+////		}
+//		
+//		System.out.println("\tWelcome to the Cluedo game !!!");
+//		while(!b.gameFinished){
+//			int index = b.whoNext()  ;
+//			Player p = playerList.get(index) ;
+//			int n = index +1 ; 
+//			System.out.println("\n*************************************************");
+//			System.out.println("Player " + n + " turn");
+//			p.turn(b.square, b.dice, b.solution , b.playerList);
+//			System.out.println("\n*************************************************");
+//			if(p.isWinner()){
+//				System.out.println("\nGame Over!!! \n Player "+ n +" win the game!!!");
+//			    b.gameFinished = true ; 
+//			    break; 
+//			}else if (b.allTerminated()){
+//				System.out.println("Game Over!!! \n No one WON the game \n All got terminated!!! ");
+//				b.gameFinished = true ; 
+//				break; 
+//			}	
 //		}
-		
-		System.out.println("\tWelcome to the Cluedo game !!!");
-		while(!b.gameFinished){
-			int index = b.whoNext()  ;
-			Player p = playerList.get(index) ;
-			int n = index +1 ; 
-			System.out.println("\n*************************************************");
-			System.out.println("Player " + n + " turn");
-			p.turn(b.square, b.dice, b.solution , b.playerList);
-			System.out.println("\n*************************************************");
-			if(p.isWinner()){
-				System.out.println("\nGame Over!!! \n Player "+ n +" win the game!!!");
-			    b.gameFinished = true ; 
-			    break; 
-			}else if (b.allTerminated()){
-				System.out.println("Game Over!!! \n No one WON the game \n All got terminated!!! ");
-				b.gameFinished = true ; 
-				break; 
-			}	
-		}
-		
-		
-		
+//		
+//		
+//		
 	}
 }

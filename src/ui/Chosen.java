@@ -6,6 +6,10 @@ public class Chosen {
 private String name ;
 private boolean chose = false ;
 
+/*
+ * This class is made just use for the character choosing at the start of each game 
+ * if the character is chose the chose variable will turn to true. 
+ */
 public Chosen ( String n  ) throws IllegalParameterException{
 	if(!n.equals("Miss_Scarlett") && !n.equals("Colonel_Mustard") && !n.equals("Mrs_White") && 
 	   !n.equals("The_Reverend_Green") && !n.equals("Mrs_Peacock") && !n.equals("Professor_Plum")){

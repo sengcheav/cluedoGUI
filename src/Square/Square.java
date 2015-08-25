@@ -214,9 +214,10 @@ public void draw(Graphics g ,Square[][] s){
 		st.draw(g, new Position(y,x), 20);
 		break;
 	case "d" :
-		Room adjacentRoom = this.adjacentRoom(s);
-		adjacentRoom.draw(g, new Position(y,x), 20);
-		
+		//Room adjacentRoom = this.adjacentRoom(s);
+		//adjacentRoom.draw(g, new Position(y,x), 20);
+		Door d = (Door)this.getContain();
+		d.draw(g, new Position(y,x), 20);
 		
 		break;
 	default :

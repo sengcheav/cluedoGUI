@@ -48,6 +48,9 @@ public class cluedoCanvas extends Canvas {
 		//draw everything 
 		//Color[] colorArray = {Color.BLACK,Color.BLACK, Color.BLACK, Color.BLACK, Color.YELLOW, Color.YELLOW, Color.YELLOW } ; 
 		
+		/*
+		 * Iterate through each squace and call .draw(Graphic, constant) 
+		 */
 		Square[][] s = this.board.getSquare();
 		for (int y = 0 ; y< 25 ; y++){
 			for(int x = 0 ; x < 25; x++ ){
@@ -59,6 +62,7 @@ public class cluedoCanvas extends Canvas {
 	}
 	
 	
+
 	
 	
 	
